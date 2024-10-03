@@ -1,0 +1,11 @@
+<div>
+  <input [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Buscar personagem..."/>
+  <ul>
+    <li *ngFor="let character of characters">
+      <img src={{character.thumbnail.path}}.{{character.thumbnail.extension}} alt={{character.comics.description}} width="48px">
+      {{ character.name }}
+    </li>
+  </ul>
+  <button (click)="goToPreviousPage()" [disabled]="currentPage === 0">Anterior</button>
+  <button (click)="goToNextPage()">Próximo</button>
+</div>
