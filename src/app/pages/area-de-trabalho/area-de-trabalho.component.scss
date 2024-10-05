@@ -37,13 +37,13 @@
   }
 
   .table-container {
-    width: 100%;
+    width: 96%;
     height: 80vh;
     overflow-x: auto;
     padding: 0 4rem;
 
     table {
-      width: 92vw;
+      width: 95.5vw;
       border-collapse: separate;
       border-spacing: 0 10px;
 
@@ -101,11 +101,16 @@
     justify-content: center;
     padding: 1rem 0;
     width: 100%;
+    font-size: 22px;
   }
 
   .pagination-options {
     display: flex;
     align-items: center;
+    margin-right: 2rem;
+    select {
+      font-size: 18px;
+    }
   }
 
   .pagination-info {
@@ -114,8 +119,24 @@
   }
 
   .navigation-buttons {
+    margin-left: 2rem;
     button {
       margin: 0 0.5rem;
+      font-size: 18px;
+      padding: 2px 5px;
     }
   }
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Ocupa toda a altura da tela */
+}
+
+.loading-spinner p {
+  font-size: 20px;
+  margin-bottom: 10px;
 }

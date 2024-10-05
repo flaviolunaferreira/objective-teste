@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import * as CryptoJS from 'crypto-js';
+import {MarvelApiResponse} from "../models/marvel.types"
 
 @Injectable({
   providedIn: 'root',

@@ -9,49 +9,60 @@
     </div>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th (click)="sortTable('name')">
-            Personagem
-            <span *ngIf="sortColumn === 'name'">
-              <span *ngIf="sortDirection === 'asc'">▼</span>
-              <span *ngIf="sortDirection === 'desc'">▲</span>
-            </span>
-          </th>
-          <th>Series</th>
-          <th>Eventos</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let character of characters">
-          <td>
-            <div class="personagem">
-              <img [src]="character.thumbnail.path + '.' + character.thumbnail.extension"
-              alt="{{ character.name }}"/>
-              <p>{{ character.name }}</p>
-            </div>
-          </td>
-          <td>
-            <div class="series">
-              <p *ngFor="let serie of character.series.items">{{serie.name}}</p>
-            </div>
-          </td>
-          <td>
-            <div class="eventos">
-              <p *ngFor="let evento of character.events.items">{{evento.name}}</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <p>Processando, por favor aguarde...</p>
   </div>
+
+  <div *ngIf="!isLoading">
+    <div class="table-container" *ngIf="characters.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th (click)="sortTable('name')">
+              Personagem
+              <span *ngIf="sortColumn === 'name'">
+                <span *ngIf="sortDirection === 'asc'">▼</span>
+                <span *ngIf="sortDirection === 'desc'">▲</span>
+              </span>
+            </th>
+            <th>Series</th>
+            <th>Eventos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let character of characters">
+            <td>
+              <div class="personagem">
+                <img [src]="character.thumbnail.path + '.' + character.thumbnail.extension"
+                alt="{{ character.name }}"/>
+                <p>{{ character.name }}</p>
+              </div>
+            </td>
+            <td>
+              <div class="series">
+                <p *ngFor="let serie of character.series.items">{{serie.name}}</p>
+              </div>
+            </td>
+            <td>
+              <div class="eventos">
+                <p *ngFor="let evento of character.events.items">{{evento.name}}</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="characters.length === 0">
+      <p>Nenhum personagem encontrado.</p>
+    </div>
+  </div>
+
 
   <div class="pagination-bar">
     <div class="pagination-options">
       <label for="itemsPerPage">Registros por página:</label>
-      <select id="itemsPerPage" (change)="changeItemsPerPage($event)">
+      <select id="itemsPerPage" (change)="changeItemsPerPage($event)" [(ngModel)]="itemsPerPage">
         <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
       </select>
     </div>
@@ -66,3 +77,4 @@
     </div>
   </div>
 </div>
+
