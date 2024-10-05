@@ -9,7 +9,7 @@ import { HttpClientModule } from '@angular/common/http';
   standalone: true,
   imports: [FormsModule, CommonModule, HttpClientModule],
   templateUrl: './area-de-trabalho.component.html',
-  styleUrl: './area-de-trabalho.component.scss',
+  styleUrls: ['./area-de-trabalho.component.scss'],
   providers: [MarvelService]
 })
 export class AreaDeTrabalhoComponent {
@@ -17,6 +17,10 @@ export class AreaDeTrabalhoComponent {
   searchTerm: string = '';
   currentPage: number = 0;
   itemsPerPage: number = 10;
+  totalPages: number = 0;
+  sortColumn: string = 'name';
+  sortDirection: string = 'asc';
+  itemsPerPageOptions: number[] = [5, 10, 20];
 
   constructor(private marvelService: MarvelService) {}
 
@@ -25,21 +29,26 @@ export class AreaDeTrabalhoComponent {
   }
 
   loadCharacters() {
-    this.marvelService.getCharacters(this.currentPage * this.itemsPerPage).subscribe((data) => {
-      console.log(data.data.results)
-      this.characters = data.data.results;
-    });
+    this.marvelService.getCharacters(this.currentPage * this.itemsPerPage, this.itemsPerPage)
+      .subscribe((data) => {
+        this.characters = data.data.results;
+        // A API provavelmente retorna um campo `total` com a contagem total de registros
+        this.totalPages = Math.ceil(data.data.total / this.itemsPerPage);
+      });
   }
 
-  onSearch() {
-    this.currentPage = 0; // Reset page when searching
-    // Implement search logic here, filtering `this.characters` based on `this.searchTerm`
-  }
 
-  // Método para navegação entre páginas
-  goToNextPage() {
-    this.currentPage++;
+  changeItemsPerPage(event: any) {
+    this.itemsPerPage = +event.target.value;
+    this.currentPage = 0;
     this.loadCharacters();
+  }
+
+  goToNextPage() {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadCharacters();
+    }
   }
 
   goToPreviousPage() {
@@ -47,5 +56,27 @@ export class AreaDeTrabalhoComponent {
       this.currentPage--;
       this.loadCharacters();
     }
+  }
+
+  sortTable(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.characters.sort((a, b) => {
+      let comparison = 0;
+      if (a[column] > b[column]) {
+        comparison = 1;
+      } else if (a[column] < b[column]) {
+        comparison = -1;
+      }
+      return this.sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  onSearch() {
+    this.currentPage = 0;
   }
 }

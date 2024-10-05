@@ -13,7 +13,7 @@ export class MarvelService {
 
   constructor(private http: HttpClient) {}
 
-  getCharacters(offset: number = 0): Observable<any> {
+  getCharacters(offset: number = 0, itemsPerPage?: number): Observable<any> {
     const ts = new Date().getTime();
     const hash = CryptoJS.MD5(ts + this.privateKey + this.publicKey).toString();
     const url = `${this.baseUrl}?ts=${ts}&apikey=${this.publicKey}&hash=${hash}&offset=${offset}`;
