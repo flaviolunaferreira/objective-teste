@@ -25,15 +25,15 @@
                 <span *ngIf="sortDirection === 'desc'">▲</span>
               </span>
             </th>
-            <th>Series</th>
-            <th>Eventos</th>
+            <th class="series">Series</th>
+            <th class="eventos">Eventos</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let character of characters">
+          <tr *ngFor="let character of filteredCharacters">
             <td>
               <div class="personagem">
-                <img [src]="character.thumbnail.path + '.' + character.thumbnail.extension"
+                <img class="imagem" [src]="character.thumbnail.path + '.' + character.thumbnail.extension"
                 alt="{{ character.name }}"/>
                 <p>{{ character.name }}</p>
               </div>

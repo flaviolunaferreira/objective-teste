@@ -31,6 +31,7 @@ export class AreaDeTrabalhoComponent {
 
   ngOnInit(): void {
     this.loadCharacters();
+    this.filteredCharacters = this.characters;
   }
 
   loadCharacters() {
@@ -49,6 +50,7 @@ export class AreaDeTrabalhoComponent {
           });
           this.isLoading = false;
         }, (error) => {
+          alert("Tivemos um pleblema na interno na api de consumo... tente em alguns instantes.")
           this.isLoading = false;
         });
     } else {
@@ -71,9 +73,13 @@ export class AreaDeTrabalhoComponent {
         this.totalPages = Math.ceil(allResults.length / this.itemsPerPage);
         this.isLoading = false;
       }, (error) => {
+        alert("Tivemos um pleblema na interno na api de consumo... tente em alguns instantes.")
         this.isLoading = false;
       });
     }
+
+    console.log(this.characters)
+
   }
 
   changeItemsPerPage(event: any) {
@@ -118,9 +124,14 @@ export class AreaDeTrabalhoComponent {
   }
 
   onSearch() {
-    this.filteredCharacters = this.characters.filter(character =>
-      character.name.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
-    this.currentPage = 0;
+    if (this.searchTerm) {
+      this.filteredCharacters = this.characters.filter(character =>
+        character.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    } else {
+      this.filteredCharacters = this.characters; // Retorna todos os personagens se o termo de busca estiver vazio
+    }
+    this.currentPage = 0; // Reseta a página para 0
   }
+
 }
