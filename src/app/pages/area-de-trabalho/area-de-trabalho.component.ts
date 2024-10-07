@@ -5,6 +5,9 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Character, MarvelApiResponse } from '../../models/marvel.types';
 import { forkJoin, Observable } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
+
+
 
 @Component({
   selector: 'app-area-de-trabalho',
@@ -17,7 +20,7 @@ import { forkJoin, Observable } from 'rxjs';
 export class AreaDeTrabalhoComponent {
   characters: Character[] = [];  // Tipagem para personagens
   filteredCharacters: Character[] = [];
-  result: Character[] = [];
+
   searchTerm: string = '';
   currentPage: number = 0;
   itemsPerPage: number = 10;
@@ -26,81 +29,85 @@ export class AreaDeTrabalhoComponent {
   sortDirection: string = 'asc';
   itemsPerPageOptions: number[] = [10, 20, 50];
   isLoading: boolean = false;
+  allCharactersLoaded: boolean = false;
+  maxVisiblePages: number = 5;
+  loadProgress: number = 0;
 
-  constructor(private marvelService: MarvelService) {}
+  constructor(private marvelService: MarvelService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadCharacters();
-    this.filteredCharacters = this.characters;
+
   }
 
+  // Função para carregar todos os personagens da API e armazená-los localmente
   loadCharacters() {
-    const offset = this.currentPage * this.itemsPerPage;
-    const apiLimit = 20; // Limite que a API retorna por padrão
-    if (this.itemsPerPage <= apiLimit) {
-      // Apenas uma requisição quando o limite for menor ou igual ao limite da API
-      this.marvelService.getCharacters(offset, apiLimit)
-        .subscribe((data: MarvelApiResponse) => {
-          this.result = data.data.results;
-          this.totalPages = Math.ceil(data.data.total / this.itemsPerPage);
-          this.result.forEach(element => {
-            if (this.characters.length < this.itemsPerPage ) {
-              this.characters.push(element)
-            }
-          });
-          this.isLoading = false;
-        }, (error) => {
-          alert("Tivemos um pleblema na interno na api de consumo... tente em alguns instantes.")
-          this.isLoading = false;
-        });
-    } else {
-      // Múltiplas requisições para grandes números de itens por página
-      const requestsNeeded = Math.ceil(this.itemsPerPage / apiLimit);
-      const requests: Observable<MarvelApiResponse>[] = [];
+    this.isLoading = true;
+    const apiLimit = 20; // Quantidade máxima que a API permite
+    let totalCharacters = 0;
+
+    // Primeiro, obter o total de personagens da Marvel API
+    this.marvelService.getCharacters(0, apiLimit).subscribe((data: MarvelApiResponse) => {
+      totalCharacters = data.data.total;  // Pega o número total de personagens
+      const requestsNeeded = Math.ceil(totalCharacters / apiLimit);
+
+      // Requisições sendo processadas uma por vez
+      let loadedCharacters = 0;
+      let requestsCompleted = 0;
 
       for (let i = 0; i < requestsNeeded; i++) {
-        const additionalOffset = offset + (i * apiLimit);
-        requests.push(this.marvelService.getCharacters(additionalOffset, apiLimit));
-      }
+        const offset = i * apiLimit;
 
-      forkJoin(requests).subscribe((responses: MarvelApiResponse[]) => {
-        let allResults: Character[] = [];
-        responses.forEach((response: MarvelApiResponse) => {
-          allResults = [...allResults, ...response.data.results];
+        // Faz uma requisição por vez e atualiza o progresso
+        this.marvelService.getCharacters(offset, apiLimit).subscribe((response: MarvelApiResponse) => {
+          this.characters.push(...response.data.results);  // Armazena personagens
+          loadedCharacters += response.data.results.length;
+          requestsCompleted++;
+
+          // Atualiza o progresso de acordo com as requisições completas
+          this.loadProgress = Math.floor((loadedCharacters / totalCharacters) * 100);
+          this.cdr.detectChanges();  // Força a atualização do progresso no template
+          console.log(`Progresso: ${this.loadProgress}%`);
+
+          // Quando todas as requisições estiverem completas
+          if (requestsCompleted === requestsNeeded) {
+            this.totalPages = Math.ceil(this.characters.length / this.itemsPerPage); // Atualiza as páginas
+            this.getCharactersForCurrentPage();  // Filtra a primeira página
+            this.isLoading = false;  // Termina o carregamento
+            this.allCharactersLoaded = true;
+          }
         });
+      }
+    });
+  }
 
-        this.characters = allResults.slice(0, this.itemsPerPage);
-        this.totalPages = Math.ceil(allResults.length / this.itemsPerPage);
-        this.isLoading = false;
-      }, (error) => {
-        alert("Tivemos um pleblema na interno na api de consumo... tente em alguns instantes.")
-        this.isLoading = false;
-      });
-    }
 
-    console.log(this.characters)
-
+  getCharactersForCurrentPage() {
+    const startIndex = this.currentPage * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.filteredCharacters = this.characters.slice(startIndex, endIndex);
   }
 
   changeItemsPerPage(event: any) {
+    this.isLoading = true;
     this.itemsPerPage = +event.target.value;
     this.currentPage = 0;
-    this.isLoading = true;
-    this.loadCharacters();
+    this.totalPages = Math.ceil(this.characters.length / this.itemsPerPage)
+    this.getCharactersForCurrentPage();
+    this.isLoading = false;
   }
 
   goToNextPage() {
-    this.isLoading = true;
     if (this.currentPage < this.totalPages - 1) {
+      this.getCharactersForCurrentPage();
       this.currentPage++;
-      this.loadCharacters();
     }
   }
 
   goToPreviousPage() {
     if (this.currentPage > 0) {
+      this.getCharactersForCurrentPage();
       this.currentPage--;
-      this.loadCharacters();
     }
   }
 
@@ -129,9 +136,28 @@ export class AreaDeTrabalhoComponent {
         character.name.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     } else {
-      this.filteredCharacters = this.characters; // Retorna todos os personagens se o termo de busca estiver vazio
+      this.filteredCharacters = this.characters;
     }
+    this.totalPages = Math.ceil(this.characters.length / this.itemsPerPage)
     this.currentPage = 0; // Reseta a página para 0
+  }
+
+  getPageRange(): number[] {
+    const start = Math.max(0, this.currentPage - Math.floor(this.maxVisiblePages / 2));
+    const end = Math.min(this.totalPages, start + this.maxVisiblePages);
+    let range = [];
+
+    for (let i = start; i < end; i++) {
+      range.push(i);
+    }
+
+    return range;
+  }
+
+  // Função para ir para uma página específica
+  goToPage(page: number): void {
+    this.currentPage = page;
+    this.getCharactersForCurrentPage();
   }
 
 }

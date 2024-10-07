@@ -10,7 +10,7 @@
   </div>
 
   <div *ngIf="isLoading" class="loading-spinner">
-    <p>Processando, por favor aguarde...</p>
+    <p>Processando, por favor aguarde... {{ loadProgress }}% carregado</p>
   </div>
 
   <div *ngIf="!isLoading">
@@ -61,20 +61,28 @@
 
   <div class="pagination-bar">
     <div class="pagination-options">
-      <label for="itemsPerPage">Registros por página:</label>
+      <label for="itemsPerPage">Registros:</label>
       <select id="itemsPerPage" (change)="changeItemsPerPage($event)" [(ngModel)]="itemsPerPage">
         <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
       </select>
     </div>
 
     <div class="pagination-info">
-      Página {{ currentPage + 1 }} de {{ totalPages }}
+      {{ currentPage + 1 }} / {{ totalPages }}
     </div>
 
-    <div class="navigation-buttons">
-      <button (click)="goToPreviousPage()" [disabled]="currentPage === 0">Anterior</button>
-      <button (click)="goToNextPage()" [disabled]="currentPage === totalPages - 1">Próximo</button>
+    <div class="pagination-buttons">
+      <!-- Botão Primeira Página -->
+      <button (click)="goToPage(0)" [disabled]="currentPage === 0">Primeira</button>
+
+      <!-- Geração dos Botões das Páginas -->
+      <button *ngFor="let page of getPageRange()" (click)="goToPage(page)"
+              [class.active]="currentPage === page">{{ page + 1 }}</button>
+
+      <!-- Botão Última Página -->
+      <button (click)="goToPage(totalPages - 1)" [disabled]="currentPage === totalPages - 1">Última</button>
     </div>
+
   </div>
 </div>
 
